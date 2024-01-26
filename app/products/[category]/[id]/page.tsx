@@ -76,7 +76,7 @@ export default function Page({params: { id }}: { params: { id: string }}) {
   }, [id]);
 
   if (!product) {
-    return <div>Loading...</div>;
+    return <div></div>;
   }
   
   return (

@@ -1,12 +1,17 @@
 "use client"
 
-import React from 'react';
+import  { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-const cartData = localStorage.getItem('cart');
-const cartItems = cartData ? JSON.parse(cartData) : [];
 
 export default function CartPage() {
+  const [cartItems, setCartItems] = useState([])
+
+  useEffect(() => {
+    const cartItem = localStorage.getItem('cart')
+    if (cartItem) setCartItems(JSON.parse(cartItem))
+  }, [])
+
   return (
     <div className="bg-gray-100 min-h-screen flex flex-col items-center pt-10">
 
