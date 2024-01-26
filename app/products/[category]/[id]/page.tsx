@@ -1,16 +1,87 @@
+"use client"
+
+import React, { useState, useEffect } from 'react';
+import 'react-toastify/dist/ReactToastify.css';
+import { toast, ToastContainer } from "react-toastify";
+import { usePathname, useSearchParams } from 'next/navigation';
 import Image from 'next/image'
 import Link from 'next/link'
 import { getProduct } from '@/app/component/api'
+import { useRouter } from 'next/navigation';
 import ColorCard from '@/app/component/ColorCard'
 import StorageCard from '@/app/component/StorageCard'
- 
-export default async function Page({params: { id }}: { params: { id: string }}) {
+import Product from '@/app/component/types'
 
-  const product = await getProduct(id)
-  const { colorOptions, storageOptions, inStock } = product
+type Cart = {
+  id: string;
+  color: string;
+  storage: string;
+};
+ 
+export default function Page({params: { id }}: { params: { id: string }}) {
+
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedStorage, setSelectedStorage] = useState('');
+  const [product, setProduct] = useState<Product | null>();
+  const cart: Cart[] = [];
+  const pathname = usePathname();
+  const searchParams = useSearchParams()
+  const color = searchParams?.get('color');
+  const storage = searchParams?.get('storage');
+
+  useEffect(() => {
+    if (color) {
+      setSelectedColor(color);
+    }
+    if (storage) {
+      setSelectedStorage(storage);
+    }
+  }, [color, storage]);
+
+  const router = useRouter();
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedColor && !selectedStorage) {
+      toast.error('Please select a color and storage option before proceeding.');
+      return;
+    } else if (!selectedColor) {
+      toast.error('Please select a color before proceeding.');
+      return;
+    } else if (!selectedStorage) {
+      toast.error('Please select a storage option before proceeding.');
+      return;
+    }
+    
+    const cartData = {
+      id: id,
+      color: selectedColor,
+      storage: selectedStorage,
+    };
+
+    cart.push(cartData);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    toast.success('Product added to cart!');
+    router.push('/cart');
+  };
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const productData: Product = await getProduct(id);
+      setProduct(productData);
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  if (!product) {
+    return <div>Loading...</div>;
+  }
   
   return (
     <div className="bg-white">
+      <ToastContainer />
       <div className="pb-16 pt-6 sm:pb-24">
         <nav
           aria-label="Breadcrumb"
@@ -71,7 +142,7 @@ export default async function Page({params: { id }}: { params: { id: string }}) 
               </div>
               {/* Reviews */}
               <div className="mt-4">
-                <h2 className="sr-only">{product.reviews}</h2>
+                <h2 className="sr-only">{}</h2>
                 <div className="flex items-center">
                   <p className="text-sm text-gray-700">
                     3.9
@@ -182,13 +253,13 @@ export default async function Page({params: { id }}: { params: { id: string }}) 
             </div>
             </div>
             <div className="mt-8 lg:col-span-5">
-              <form action="/cart" method="GET">
+              <form onSubmit={handleSubmit}>
                 {/* Color picker */}
                 <div>
                   <h2 className="text-sm font-medium text-gray-900">Color</h2>
                   <fieldset className="mt-2">
                     <legend className="sr-only">Choose a color</legend>
-                    <ColorCard colorOptions={colorOptions} />
+                    <ColorCard colorOptions={product.colorOptions} selectedColor={selectedColor} onColorChange={setSelectedColor} />
                   </fieldset>
                 </div>
                 {/* Size picker */}
@@ -203,13 +274,13 @@ export default async function Page({params: { id }}: { params: { id: string }}) 
                   </div>
                   <fieldset className="mt-2">
                     <legend className="sr-only">Choose a size</legend>
-                      <StorageCard storageOptions={storageOptions} inStock={inStock} />
+                    <StorageCard storageOptions={product.storageOptions} selectedSize={selectedStorage} onSizeChange={setSelectedStorage} inStock={product.inStock} />
                   </fieldset>
                 </div>
                 {/* In stock */}
                 <div className="mt-8">
                   <span className="text-sm font-medium text-gray-900">
-                    {inStock ? (
+                    {product.inStock ? (
                       <p className="flex items-center text-green-500">
                           In stock
                       </p>

@@ -1,15 +1,34 @@
 "use client"
 import { useState } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
-export default function Page({ storageOptions, inStock }: { storageOptions: string[], inStock: boolean }) {
+
+export default function Page({ storageOptions, selectedSize, onSizeChange,  inStock }: { storageOptions: string[], selectedSize: string, onSizeChange: (storage: string) => void , inStock: boolean }) {
+    
     const [activeOption, setActiveOption] = useState<string | null>(null);
-    const [checkedOption, setCheckedOption] = useState<string | null>(null);
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams()
+    const color = searchParams?.get('color');
 
+    const handleSizeChange = (storage: string) => {
+        onSizeChange(storage);
+        if (color) {
+            const newUrl = `${pathname}?color=${color}&storage=${storage}`;
+            router.push(newUrl);
+            return;
+        } else {
+            const newUrl = `${pathname}?storage=${storage}`;
+            router.push(newUrl);
+            return;
+        }
+    };
+    
     return (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
             {storageOptions.map((storageOption, index) => {
                 const isActive = storageOption === activeOption;
-                const isChecked = storageOption === checkedOption;
+                const isChecked = storageOption === selectedSize;
                 const isAvailable = inStock;
 
                 return (
@@ -29,7 +48,7 @@ export default function Page({ storageOptions, inStock }: { storageOptions: stri
                             className="sr-only"
                             aria-labelledby={`size-choice-${index}-label`}
                             checked={isChecked}
-                            onChange={() => setCheckedOption(storageOption)}
+                            onChange={() => handleSizeChange(storageOption)}
                             disabled={!isAvailable}
                         />
                         <span id={`storage-choice-${index}-label`} className={`block text-center ${isChecked ? 'text-white' : 'text-gray-900'}`}>

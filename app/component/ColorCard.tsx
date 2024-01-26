@@ -1,19 +1,15 @@
 "use client"
+import { useRouter, usePathname } from 'next/navigation';
 
-import React, { useState, useEffect } from 'react';
-import { usePathname} from 'next/navigation';
-
-export default function ColorCard({ colorOptions }: { colorOptions: string[] }) {
-  const [selectedColor, setSelectedColor] = useState('');
+export default function ColorCard({ colorOptions, selectedColor, onColorChange }: { colorOptions: string[]; selectedColor: string; onColorChange: (color: string) => void }) {
+  const router = useRouter();
   const pathname = usePathname();
-  
 
-  useEffect(() => {
-    if (pathname) {
-      const path = pathname.split('?')[1]?.split('=')[1]
-      setSelectedColor(path);
-    }
-  }, [pathname]);
+  const handleColorChange = (color: string) => {
+    onColorChange(color);
+    const newUrl = `${pathname}?color=${color}`;
+    router.push(newUrl);
+  };
 
   return (
     <div className="flex items-center space-x-3">
@@ -26,7 +22,7 @@ export default function ColorCard({ colorOptions }: { colorOptions: string[] }) 
             className="sr-only"
             id={`color-choice-${index}`}
             checked={selectedColor === colorOption}
-            onChange={() => setSelectedColor(colorOption)}
+            onChange={() => handleColorChange(colorOption)}
           />
           <span
             aria-hidden="true"
