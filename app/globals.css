@@ -31,3 +31,7 @@ body {
     text-wrap: balance;
   }
 }
+
+.radio:checked ~ .color {
+  @apply ring ring-offset-1;
+}
